@@ -1,0 +1,20 @@
+{
+  "name": "B站自动点赞插件",
+  "description": "自动检测bilibili网站上的点赞按钮，当按钮颜色为特定值时自动点击",
+  "version": "1.0",
+  "manifest_version": 3,
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*.bilibili.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
