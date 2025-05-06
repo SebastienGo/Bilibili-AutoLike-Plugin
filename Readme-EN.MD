@@ -2,11 +2,16 @@
 
 ## ✨ Version
 
-`v1.0` - Make your viewing experience more enjoyable!
+`v1.0.1` - Make your viewing experience more enjoyable!
 
 ## 🚀 Feature Introduction
 
 This Chrome browser plugin intelligently detects the like status of videos on bilibili.com and automatically likes content that you enjoy! When a video has already been manually liked, the plugin will intelligently recognize this and automatically skip, avoiding duplicate actions.
+
+## 📋 Update Log
+
+- v1.0.1 (2025-05-06 20:18): Fixed the "Identifier has already been declared" error that might occur when loading pages, improved plugin stability and compatibility.
+- v1.0 (Initial version): First release
 
 ## 🔧 Installation Method
 

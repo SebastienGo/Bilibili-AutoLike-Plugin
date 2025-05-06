@@ -38,20 +38,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url && tab.url.includes('bilibili.com')) {
     // 设置图标为活动状态（B站蓝色）
     updateIcon(IconState.ACTIVE);
-    
-    // 注入content脚本
-    chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      files: ['content.js']
-    })
-    .then(() => {
-      console.log('脚本注入成功');
-    })
-    .catch(err => {
-      console.error('脚本注入错误:', err);
-      // 出错时设置图标为错误状态
-      updateIcon(IconState.ERROR);
-    });
   } else if (changeInfo.status === 'complete' && tab.url && !tab.url.includes('bilibili.com')) {
     // 不是B站页面时恢复默认图标
     updateIcon(IconState.DEFAULT);

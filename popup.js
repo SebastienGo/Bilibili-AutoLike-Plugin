@@ -12,6 +12,28 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // 向content脚本发送消息，请求检查点赞按钮
       chrome.tabs.sendMessage(currentTab.id, {action: "checkLikeButton"}, function(response) {
+        // 检查是否有错误发生
+        if (chrome.runtime.lastError) {
+          console.log('通信错误:', chrome.runtime.lastError.message);
+          
+          // 创建状态显示区域
+          let buttonStatus = document.querySelector('.button-status');
+          if (!buttonStatus) {
+            buttonStatus = document.createElement('div');
+            buttonStatus.className = 'button-status';
+            buttonStatus.style.margin = '10px 0';
+            buttonStatus.style.padding = '8px';
+            buttonStatus.style.borderRadius = '4px';
+            buttonStatus.style.backgroundColor = '#ffebee';
+            buttonStatus.style.color = '#c62828';
+            document.querySelector('.container').insertBefore(buttonStatus, document.querySelector('.footer'));
+          }
+          
+          // 显示错误信息
+          buttonStatus.innerHTML = '无法与页面通信<br>可能原因: 页面刚刚加载或刷新<br>请重新打开弹窗或刷新页面';
+          return;
+        }
+        
         // 创建按钮状态显示区域（如果尚不存在）
         let buttonStatus = document.querySelector('.button-status');
         if (!buttonStatus) {
