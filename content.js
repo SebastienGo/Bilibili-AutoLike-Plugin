@@ -12,6 +12,13 @@
     ERROR: 'error'         // 错误状态 - 红色
   };
 
+  // 记录当前URL，用于检测URL变化
+  let currentUrl = window.location.href;
+  
+  // 定义检测冷却时间，避免短时间内多次重复检测
+  let lastCheckTime = 0;
+  const CHECK_COOLDOWN = 2000; // 2秒冷却时间
+
   // 更新扩展图标状态的函数
   function updateIconState(state) {
     chrome.runtime.sendMessage({
@@ -62,6 +69,11 @@
 
   // 检查点赞按钮状态并进行操作的函数
   function checkAndLikeButton() {
+    // 首先检查是否应该执行检测
+    if (!shouldCheckLikeButton()) {
+      return;
+    }
+    
     console.log('开始检测点赞按钮');
     
     // 更新图标为活动状态
@@ -233,7 +245,114 @@
     }
   );
 
-  // 等待5秒后执行初始检测
-  setTimeout(checkAndLikeButton, 5000); // 等待5秒(5000毫秒)
+  // 判断当前页面是否为视频或番剧页面
+  function isVideoPage() {
+    const url = window.location.href;
+    return url.includes('/video/') || 
+           url.includes('/bangumi/play') || 
+           url.includes('/list/watchlater') ||
+           url.includes('/medialist/play/');
+  }
+
+  // 检测是否应进行点赞检查（考虑冷却时间和页面类型）
+  function shouldCheckLikeButton() {
+    // 检查冷却时间
+    const now = Date.now();
+    if (now - lastCheckTime < CHECK_COOLDOWN) {
+      console.log('冷却时间内，跳过检测');
+      return false;
+    }
+    
+    // 检查页面类型
+    if (!isVideoPage()) {
+      console.log('非视频页面，跳过检测');
+      return false;
+    }
+    
+    // 更新最后检测时间
+    lastCheckTime = now;
+    return true;
+  }
+
+  // 改进1: 添加URL变更检测函数
+  function checkUrlChange() {
+    if (currentUrl !== window.location.href) {
+      console.log('检测到URL变更:', window.location.href);
+      currentUrl = window.location.href;
+      
+      // URL变更后延迟5秒执行检测，确保页面完全加载
+      setTimeout(checkAndLikeButton, 5000);
+    }
+  }
+
+  // 改进2: 添加页面历史状态监听
+  window.addEventListener('popstate', function() {
+    console.log('检测到历史状态变化');
+    // 延时重新检测，避免页面元素未加载完成
+    setTimeout(checkAndLikeButton, 3000);
+  });
+
+  // 改进3: 创建定期检测函数
+  function setupIntervalCheck() {
+    // 每30秒检查一次当前页面状态，适应长时间浏览场景
+    setInterval(function() {
+      checkUrlChange(); // 检查URL是否变更
+      
+      // 如果是视频页面，则尝试检测点赞状态
+      if (isVideoPage()) {
+        console.log('定时检测点赞状态');
+        checkAndLikeButton();
+      }
+    }, 30000); // 30秒间隔
+  }
+
+  // 改进4: 添加DOM变化监听
+  function setupMutationObserver() {
+    // 创建监听器
+    const observer = new MutationObserver(function(mutations) {
+      // 当播放器区域变化时，可能表示切换了视频
+      const playerChanged = mutations.some(m => {
+        const targetId = m.target.id || '';
+        const targetClass = m.target.className || '';
+        
+        return targetId.includes('player') || 
+               targetClass.includes('player') || 
+               targetId === 'app' || 
+               targetId === 'bofqi';
+      });
+      
+      if (playerChanged && isVideoPage()) {
+        console.log('检测到播放器区域变化');
+        setTimeout(checkAndLikeButton, 3000);
+      }
+    });
+    
+    // 开始观察文档变化
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['id', 'class']
+    });
+    
+    console.log('DOM变化监听器已设置');
+  }
+
+  // 初始化各种监听和检测机制
+  function initialize() {
+    // 等待5秒后执行初始检测
+    setTimeout(checkAndLikeButton, 5000);
+    
+    // 设置定期检测
+    setupIntervalCheck();
+    
+    // 设置DOM变化监听
+    setupMutationObserver();
+    
+    console.log('B站自动点赞插件增强功能已初始化');
+  }
+
+  // 执行初始化
+  initialize();
 
 })();
